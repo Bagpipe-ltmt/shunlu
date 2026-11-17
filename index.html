@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#1466ff">
+<meta name="description" content="顺路：车来了实时公交 + 高德导航路线 + 支付宝乘车码，一个手机页面全搞定。">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="顺路">
+<meta name="format-detection" content="telephone=no">
+<title>顺路 · 公交 / 导航 / 乘车码</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-row">
+    <div class="brand"><b>顺路</b><span>公交 · 导航 · 乘车码</span></div>
+    <button class="citybtn" data-act="city">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11Z"/><circle cx="12" cy="10" r="2.6"/></svg>
+      <span id="city-label">上海</span>
+    </button>
+    <button class="ico-btn" id="btn-refresh" data-act="refresh" aria-label="刷新">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 6.4"/><path d="M20 4v7h-7"/></svg>
+    </button>
+  </div>
+  <div class="tabbar-hint" id="top-hint">实时到站 · 高德路线 · 支付宝一码通行</div>
+</header>
+
+<div class="insecure-bar" id="insecure-bar" hidden>
+  <span>⚠ 这是局域网 http 地址，定位被浏览器禁用</span>
+  <a id="insecure-link" href="https://shunlu.pages.dev">用线上版 →</a>
+</div>
+
+<main>
+
+  <!-- ============ 公交 ============ -->
+  <section class="view active" id="view-bus">
+    <div class="card flush">
+      <div style="padding:14px 14px 10px">
+        <div class="searchbar">
+          <label class="field grow" style="flex:1">
+            <svg class="prefix" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="q" type="search" placeholder="线路 / 站点，如 71、陆家嘴" autocomplete="off" enterkeyhint="search">
+          </label>
+          <button class="btn primary" data-act="search">搜索</button>
+        </div>
+        <div class="row" style="margin-top:10px;gap:8px">
+          <button class="btn sm ghost" data-act="nearby">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+            附近站点
+          </button>
+          <button class="btn sm ghost" data-act="demo">示例站牌</button>
+          <span class="tiny muted grow" style="text-align:right" id="bus-updated"></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="search-results"></div>
+    <div id="nearby-box"></div>
+
+    <div class="row between" style="margin:4px 4px 8px">
+      <div class="h2" style="margin:0">我的站牌 <span class="badge gray" id="watch-count">0</span></div>
+      <button class="btn sm ghost" data-act="clear-watch" id="btn-clear-watch" hidden>清空</button>
+    </div>
+    <div id="watch-box"></div>
+
+    <div class="card" id="bus-empty">
+      <div class="empty">
+        <div class="big">🚌</div>
+        还没有关注的站牌<br>
+        搜一条线路，或点「附近站点」看看最近的车
+        <div style="margin-top:14px"><button class="btn primary sm" data-act="demo">看看示例（上海 71 路）</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 路线 ============ -->
+  <section class="view" id="view-route">
+    <div class="card">
+      <div class="row" style="align-items:stretch">
+        <div class="grow">
+          <div class="field" style="margin-bottom:8px">
+            <span class="prefix" style="color:var(--green)">起</span>
+            <input id="from-input" placeholder="从哪出发" autocomplete="off">
+            <button class="suffix" data-act="geo-from">定位</button>
+          </div>
+          <div class="field">
+            <span class="prefix" style="color:var(--red)">终</span>
+            <input id="to-input" placeholder="到哪去" autocomplete="off">
+            <button class="suffix" data-act="geo-to">定位</button>
+          </div>
+        </div>
+        <button class="swap" data-act="swap" aria-label="交换起终点">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v13m0 0-3-3m3 3 3-3M17 20V7m0 0 3 3m-3-3-3 3"/></svg>
+        </button>
+      </div>
+      <div class="tips" id="tips-box"></div>
+      <div class="chips" style="margin-top:12px" id="mode-chips">
+        <button class="chip active" data-act="mode" data-mode="transit">🚌 公交</button>
+        <button class="chip" data-act="mode" data-mode="drive">🚗 驾车</button>
+        <button class="chip" data-act="mode" data-mode="ride">🚲 骑行</button>
+        <button class="chip" data-act="mode" data-mode="walk">🚶 步行</button>
+      </div>
+      <button class="btn primary block" style="margin-top:12px" data-act="plan">查询路线</button>
+    </div>
+
+    <div id="plan-box"></div>
+    <div id="plan-empty" class="card">
+      <div class="empty">
+        <div class="big">🧭</div>
+        选好起终点后点「查询路线」<br>
+        公交方案来自车来了，驾车/骑行/步行来自高德<br>
+        点方案里的按钮可直接跳到高德导航
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 乘车码 ============ -->
+  <section class="view" id="view-code">
+    <div class="code-hero">
+      <div class="k">支付宝 · 乘车码</div>
+      <div class="t">一码通 公交 / 地铁</div>
+      <button class="btn block" data-act="alipay-code">打开乘车码</button>
+      <button class="btn block line" data-act="alipay-scan">打开支付宝扫一扫</button>
+    </div>
+
+    <div class="card">
+      <div class="h2">怎么用最快 <span class="tag" data-act="install">添加到桌面 ›</span></div>
+      <div class="steps">
+        <div class="step">上车前 <b>1 分钟</b>点上面的「打开乘车码」，手机会直接跳进支付宝的乘车码页。</div>
+        <div class="step">第一次用会提示开通，按支付宝引导绑定城市即可，之后免密。</div>
+        <div class="step">把本页「添加到主屏幕」，桌面图标长按还能直接见到「乘车码」快捷方式。</div>
+        <div class="step">地铁闸机用同一个码，出站自动扣费；公交上车扫码即可。</div>
+      </div>
+      <hr class="sep">
+      <div class="hint">
+        <span>🛈</span>
+        <span>乘车码是支付宝里的动态二维码，每分钟刷新，出于安全任何第三方都无法内嵌显示。这里做的是「一键直达」，比手动找入口快 5 步。</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="h2">常用地址 <span class="tag" data-act="route-tab">去查路线 ›</span></div>
+      <div class="list" id="places-box"><div class="empty small">在「路线」里查过的目的地会出现在这里</div></div>
+    </div>
+
+    <div class="card">
+      <div class="h2">支付设置</div>
+      <div class="kv"><span class="k">乘车码跳转</span><span id="code-scheme-label" class="mono small">默认</span></div>
+      <button class="btn block ghost" style="margin-top:10px" data-act="code-custom">自定义跳转链接</button>
+    </div>
+  </section>
+
+  <!-- ============ 我的 ============ -->
+  <section class="view" id="view-me">
+    <div class="card">
+      <div class="h2">数据源自检</div>
+      <div class="list" id="health-box">
+        <div class="kv"><span class="k">车来了实时公交</span><span class="small"><i class="dot wait"></i> 待检测</span></div>
+        <div class="kv"><span class="k">高德开放平台</span><span class="small"><i class="dot wait"></i> 待检测</span></div>
+      </div>
+      <button class="btn block ghost" style="margin-top:10px" data-act="health">重新检测</button>
+    </div>
+
+    <div class="card">
+      <div class="h2">设置</div>
+      <div class="field" style="margin-bottom:10px">
+        <svg class="prefix" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 7a4 4 0 1 0-3.5 4H4v3h2v2h3v-2h2.5a4 4 0 0 0 3.5-4Z"/></svg>
+        <input id="key-input" type="text" placeholder="高德 Web 服务 Key（可选）" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="tiny muted" style="margin:-4px 0 12px">
+        没有 Key 也能用：公交到站、公交路线、一键跳高德导航都不需要 Key。填上 Key 后可搜地址、看驾车/骑行/步行路线。
+        <a href="https://console.amap.com/dev/key/app" target="_blank" rel="noopener">去申请（免费）</a>。
+      </div>
+
+      <div class="field" style="margin-bottom:10px">
+        <svg class="prefix" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+        <input id="base-input" type="text" placeholder="车来了接口地址" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="tiny muted" style="margin:-4px 0 4px">默认用公共实例；自建 chelaile-api-server 可填 http://ip:8787。</div>
+
+      <button class="btn primary block" style="margin-top:12px" data-act="save-settings">保存设置</button>
+    </div>
+
+    <div class="card">
+      <div class="h2">关于</div>
+      <div class="kv"><span class="k">版本</span><span class="small">1.0.0</span></div>
+      <div class="kv"><span class="k">公交数据</span><span class="small">车来了（chelaile-api-server 协议）</span></div>
+      <div class="kv"><span class="k">路线数据</span><span class="small">高德开放平台 / 车来了换乘规划</span></div>
+      <div class="kv"><span class="k">本机存储</span><span class="small" id="store-size">—</span></div>
+      <hr class="sep">
+      <div class="hint">
+        <span>🛈</span>
+        <span>所有设置只存在这台手机的浏览器里（localStorage），不会上传任何服务器。公交/路线请求由手机直接发往车来了与高德。</span>
+      </div>
+      <button class="btn block ghost danger" style="margin-top:12px" data-act="reset">清除本机数据</button>
+    </div>
+  </section>
+
+</main>
+
+<nav class="nav">
+  <button class="nav-item active" data-act="tab" data-tab="bus">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="15" rx="3"/><path d="M4 11h16M8 18v2M16 18v2"/><circle cx="8.5" cy="14.5" r=".8" fill="currentColor"/><circle cx="15.5" cy="14.5" r=".8" fill="currentColor"/></svg>
+    公交
+  </button>
+  <button class="nav-item" data-act="tab" data-tab="route">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H14a4 4 0 0 0 0-8h-4a4 4 0 0 1 0-8" opacity=".9"/></svg>
+    路线
+  </button>
+  <button class="nav-item" data-act="tab" data-tab="code">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM20 14v.01M20 20v.01M14 20v.01M17 20v.01"/></svg>
+    乘车码
+  </button>
+  <button class="nav-item" data-act="tab" data-tab="me">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>
+    我的
+  </button>
+</nav>
+
+<div class="mask" id="mask" data-act="close-sheet"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-grab"></div>
+  <div class="sheet-head"><b id="sheet-title">标题</b><button class="x" data-act="close-sheet" aria-label="关闭">✕</button></div>
+  <div class="sheet-body" id="sheet-body"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js?v=3"></script>
+</body>
+</html>

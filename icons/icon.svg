@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="顺路">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b82ff"/>
+      <stop offset="0.55" stop-color="#1466ff"/>
+      <stop offset="1" stop-color="#0a3fb8"/>
+    </linearGradient>
+    <linearGradient id="bus" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e6efff"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- 背景路网 -->
+  <g stroke="#ffffff" stroke-opacity="0.16" stroke-width="18" fill="none" stroke-linecap="round">
+    <path d="M52 372c78-6 96-64 156-70s96 52 158 46 88-42 94-62"/>
+    <path d="M74 140c58 4 84 44 132 44s72-38 126-40 74 30 106 32"/>
+  </g>
+
+  <!-- 站点圆点 -->
+  <g fill="#ffffff" fill-opacity="0.55">
+    <circle cx="140" cy="308" r="13"/>
+    <circle cx="372" cy="336" r="13"/>
+    <circle cx="204" cy="184" r="13"/>
+    <circle cx="356" cy="184" r="13"/>
+  </g>
+
+  <!-- 公交车 -->
+  <g>
+    <rect x="126" y="176" width="260" height="188" rx="44" fill="url(#bus)"/>
+    <rect x="150" y="200" width="212" height="76" rx="22" fill="#1466ff"/>
+    <rect x="150" y="200" width="212" height="76" rx="22" fill="#0a3fb8" fill-opacity="0.35"/>
+    <path d="M256 200v76" stroke="#ffffff" stroke-opacity="0.45" stroke-width="8"/>
+    <!-- 车灯 -->
+    <circle cx="158" cy="322" r="12" fill="#ffd166"/>
+    <circle cx="354" cy="322" r="12" fill="#ffd166"/>
+    <!-- 路线指示 -->
+    <rect x="196" y="306" width="120" height="14" rx="7" fill="#1466ff" fill-opacity="0.35"/>
+    <!-- 车轮 -->
+    <circle cx="176" cy="372" r="24" fill="#0b1a33"/>
+    <circle cx="176" cy="372" r="9" fill="#8fb4ff"/>
+    <circle cx="336" cy="372" r="24" fill="#0b1a33"/>
+    <circle cx="336" cy="372" r="9" fill="#8fb4ff"/>
+  </g>
+
+  <!-- 定位箭头 -->
+  <g transform="translate(352 118) rotate(38)">
+    <path d="M0-46 34 34 0 14-34 34Z" fill="#3ddc97" stroke="#0b1a33" stroke-width="8" stroke-linejoin="round"/>
+  </g>
+</svg>

@@ -1,0 +1,53 @@
+{
+  "name": "顺路 · 公交到站 路线 乘车码",
+  "short_name": "顺路",
+  "description": "车来了实时公交、高德路线与支付宝乘车码放在一个屏幕里。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f6fa",
+  "theme_color": "#1466ff",
+  "categories": ["travel", "navigation", "utilities"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "乘车码",
+      "short_name": "乘车码",
+      "url": "./#code",
+      "description": "直接打开乘车码页"
+    },
+    {
+      "name": "我的站牌",
+      "short_name": "站牌",
+      "url": "./#bus",
+      "description": "查看实时到站"
+    }
+  ]
+}
