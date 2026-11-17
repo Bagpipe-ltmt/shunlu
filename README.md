@@ -11,6 +11,11 @@
 
 没有构建步骤，没有后端，没有账号。`index.html + app.js + styles.css` 三个文件就是全部。
 
+**在线地址（手机直接打开，可添加到主屏幕）**
+
+- Cloudflare Pages：<https://shunlu.pages.dev>
+- GitHub Pages：<https://bagpipe-ltmt.github.io/shunlu/>
+
 真机截图（390×844，上海 71 路实时数据）：`screenshots/1-bus.png`、`2-route.png`、`3-code.png`、`4-me.png`。
 
 ---
