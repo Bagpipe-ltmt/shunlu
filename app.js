@@ -537,13 +537,30 @@
    * 8. 公交：附近站点
    * ================================================================= */
 
+  /* 一辆车到本站还有多少秒；没有可靠 ETA 时返回 null */
+  function busSec(b) {
+    if (!b) return null;
+    if (b.eta && typeof b.eta.travelTime === 'number' && b.eta.travelTime >= 0) return b.eta.travelTime;
+    if (typeof b.travelTime === 'number' && b.travelTime >= 0) return b.travelTime;
+    return null;
+  }
+
+  /* 按「还有多久到本站」从早到晚排；算不出时间的车排最后，互相保持原有顺序 */
+  function sortBuses(buses) {
+    return (buses || []).map(function (b, i) {
+      var s = busSec(b);
+      return { b: b, i: i, s: s === null ? Infinity : s };
+    }).sort(function (x, y) {
+      return x.s === y.s ? x.i - y.i : x.s - y.s;
+    }).map(function (x) { return x.b; });
+  }
+
   /* 到站时间：lines/realtime 给 eta.travelTime，stops/nearby 直接给 travelTime */
   function lineEta(line) {
-    var buses = (line && line.buses) || [];
+    var buses = sortBuses(line && line.buses);
     for (var i = 0; i < buses.length; i++) {
-      var b = buses[i];
-      if (b.eta && b.eta.travelTime >= 0) return { sec: b.eta.travelTime, bus: b };
-      if (typeof b.travelTime === 'number' && b.travelTime >= 0) return { sec: b.travelTime, bus: b };
+      var sec = busSec(buses[i]);
+      if (sec !== null) return { sec: sec, bus: buses[i] };
     }
     return null;
   }
@@ -700,15 +717,12 @@
     var buses = [];
     var real = null;
     if (rt && rt.ok && rt.j) {
-      buses = rt.j.buses || [];
+      buses = sortBuses(rt.j.buses || []);  // 最早到站的排最前
       real = rt.j.realData !== false;
     }
 
-    var first = null;
-    for (var i = 0; i < buses.length; i++) {
-      if (buses[i].eta && buses[i].eta.travelTime >= 0) { first = buses[i]; break; }
-    }
-    if (!first && buses.length) first = buses[0];
+    var first = buses.length ? buses[0] : null;
+    var firstSec = first ? busSec(first) : null;
 
     var etaHtml = '';
     if (!rt) {
@@ -717,12 +731,15 @@
       etaHtml = '<b class="none">读取失败</b><span>' + esc(rt.e || '') + '</span>';
     } else if (!buses.length) {
       etaHtml = '<b class="none">暂无车</b><span>' + (real === false ? '未发车 / 非实时' : '等下一班') + '</span>';
-    } else if (first.eta && first.eta.travelTime >= 0) {
-      var sec = first.eta.travelTime;
+    } else if (firstSec !== null) {
+      var sec = firstSec;
       var soon = sec <= 120;
+      var arrive = (first.eta && first.eta.displayTime)
+        ? esc(first.eta.displayTime) + ' 到站'
+        : clock(Date.now() + sec * 1000) + ' 到站';
       etaHtml = '<b class="' + (soon ? 'soon' : '') + (sec < 60 ? ' word' : '') + '">' +
         (sec < 60 ? '即将到站' : Math.round(sec / 60) + '<small style="font-size:13px;font-weight:600">分钟</small>') +
-        '</b><span>' + (first.eta.displayTime ? esc(first.eta.displayTime) + ' 到站' : '预计到站时间') + '</span>';
+        '</b><span>' + arrive + '</span>';
     } else {
       var away = null;
       if (first.order !== undefined && w.targetOrder) {
@@ -737,8 +754,9 @@
 
     var rows = '';
     buses.slice(0, 3).forEach(function (b, idx) {
-      var when = b.eta && b.eta.travelTime >= 0
-        ? (b.eta.travelTime < 60 ? '即将到站' : Math.round(b.eta.travelTime / 60) + ' 分钟')
+      var bs = busSec(b);
+      var when = bs !== null
+        ? (bs < 60 ? '即将到站' : Math.round(bs / 60) + ' 分钟')
         : (b.distanceToWaitStn ? '距站 ' + fmtDist(b.distanceToWaitStn) : '在途');
       rows += '<div class="bus-row">' +
         '<span style="flex:none" class="tiny">' + (idx === 0 ? '下一辆' : '第' + (idx + 1) + '辆') + '</span>' +
